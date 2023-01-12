@@ -7,14 +7,14 @@ dataset_type = 'YOLOv5CocoDataset'
 # parameters that often need to be modified
 num_classes = 80
 img_scale = (640, 640)  # width, height
-deepen_factor = 0.33
-widen_factor = 0.5
-max_epochs = 300
-save_epoch_intervals = 10
-train_batch_size_per_gpu = 16
-train_num_workers = 8
-val_batch_size_per_gpu = 1
-val_num_workers = 2
+deepen_factor = 0.33  # 控制网络结构深度的缩放因子，YOLOv5-s 为 0.33
+widen_factor = 0.5  # 控制网络结构宽度的缩放因子，YOLOv5-s 为 0.5
+max_epochs = 300  # 最大训练轮次 300 轮
+save_epoch_intervals = 10  # 验证间隔，每 10 个 epoch 验证一次
+train_batch_size_per_gpu = 16  # 训练时单个 GPU 的 Batch size
+train_num_workers = 8  # 训练时单个 GPU 分配的数据加载线程数
+val_batch_size_per_gpu = 1  # 验证时单个 GPU 的 Batch size
+val_num_workers = 2  # 验证时单个 GPU 分配的数据加载线程数
 
 # persistent_workers must be False if num_workers is 0.
 persistent_workers = True
@@ -30,12 +30,12 @@ batch_shapes_cfg = dict(
     size_divisor=32,
     extra_pad_ratio=0.5)
 
-anchors = [
+anchors = [ # 多尺度的先验框基本尺寸
     [(10, 13), (16, 30), (33, 23)],  # P3/8
     [(30, 61), (62, 45), (59, 119)],  # P4/16
     [(116, 90), (156, 198), (373, 326)]  # P5/32
 ]
-strides = [8, 16, 32]
+strides = [8, 16, 32]  # 先验框生成器的步幅
 num_det_layers = 3
 
 # single-scale training is recommended to
@@ -43,8 +43,8 @@ num_det_layers = 3
 env_cfg = dict(cudnn_benchmark=True)
 
 model = dict(
-    type='YOLODetector',
-    data_preprocessor=dict(
+    type='YOLODetector',  # 检测器名
+    data_preprocessor=dict(  # 数据预处理器的配置，通常包括图像归一化和 padding
         type='mmdet.DetDataPreprocessor',
         mean=[0., 0., 0.],
         std=[255., 255., 255.],
@@ -147,8 +147,9 @@ train_pipeline = [
     dict(type='mmdet.RandomFlip', prob=0.5),
     dict(
         type='mmdet.PackDetInputs',
-        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape', 'flip',
-                   'flip_direction'))
+        meta_keys=(
+            'img_id', 'img_path', 'ori_shape', 'img_shape', 'flip',
+            'flip_direction'))
 ]
 
 train_dataloader = dict(
@@ -176,8 +177,9 @@ test_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True, _scope_='mmdet'),
     dict(
         type='mmdet.PackDetInputs',
-        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor', 'pad_param'))
+        meta_keys=(
+            'img_id', 'img_path', 'ori_shape', 'img_shape', 'scale_factor',
+            'pad_param'))
 ]
 
 val_dataloader = dict(
