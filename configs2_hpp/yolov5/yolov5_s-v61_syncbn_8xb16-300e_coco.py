@@ -45,38 +45,38 @@ env_cfg = dict(cudnn_benchmark=True)
 model = dict(
     type='YOLODetector',  # 检测器名
     data_preprocessor=dict(  # 数据预处理器的配置，通常包括图像归一化和 padding
-        type='mmdet.DetDataPreprocessor',
-        mean=[0., 0., 0.],
-        std=[255., 255., 255.],
-        bgr_to_rgb=True),
-    backbone=dict(
-        type='YOLOv5CSPDarknet',
-        deepen_factor=deepen_factor,
-        widen_factor=widen_factor,
-        norm_cfg=dict(type='BN', momentum=0.03, eps=0.001),
-        act_cfg=dict(type='SiLU', inplace=True)),
+        type='mmdet.DetDataPreprocessor',  # 数据预处理器的类型，还可以选择 'YOLOv5DetDataPreprocessor' 训练速度更快
+        mean=[0., 0., 0.],  # 用于预训练骨干网络的图像归一化通道均值，按 R、G、B 排序
+        std=[255., 255., 255.],  # 用于预训练骨干网络的图像归一化通道标准差，按 R、G、B 排序
+        bgr_to_rgb=True),  # 是否将图像通道从 BGR 转为 RGB
+    backbone=dict(   # 主干网络的配置文件
+        type='YOLOv5CSPDarknet',  # 主干网络的类别，目前可选用 'YOLOv5CSPDarknet', 'YOLOv6EfficientRep', 'YOLOXCSPDarknet' 3种
+        deepen_factor=deepen_factor,  # 控制网络结构深度的缩放因子
+        widen_factor=widen_factor,  # 控制网络结构宽度的缩放因子
+        norm_cfg=dict(type='BN', momentum=0.03, eps=0.001),  # 归一化层(norm layer)的配置项
+        act_cfg=dict(type='SiLU', inplace=True)),  # 激活函数(activation function)的配置项
     neck=dict(
-        type='YOLOv5PAFPN',
-        deepen_factor=deepen_factor,
-        widen_factor=widen_factor,
-        in_channels=[256, 512, 1024],
-        out_channels=[256, 512, 1024],
-        num_csp_blocks=3,
-        norm_cfg=dict(type='BN', momentum=0.03, eps=0.001),
-        act_cfg=dict(type='SiLU', inplace=True)),
+        type='YOLOv5PAFPN',  # 检测器的 neck 是 YOLOv5FPN，我们同样支持 'YOLOv6RepPAFPN', 'YOLOXPAFPN'
+        deepen_factor=deepen_factor,  # 控制网络结构深度的缩放因子
+        widen_factor=widen_factor,  # 控制网络结构宽度的缩放因子
+        in_channels=[256, 512, 1024],  # 输入通道数，与 Backbone 的输出通道一致
+        out_channels=[256, 512, 1024],  # 输出通道数，与 Head 的输入通道一致
+        num_csp_blocks=3,  # CSPLayer 中 bottlenecks 的数量
+        norm_cfg=dict(type='BN', momentum=0.03, eps=0.001),  # 归一化层(norm layer)的配置项
+        act_cfg=dict(type='SiLU', inplace=True)),  # 激活函数(activation function)的配置项
     bbox_head=dict(
-        type='YOLOv5Head',
+        type='YOLOv5Head',  # bbox_head 的类型是 'YOLOv5Head', 我们目前也支持 'YOLOv6Head', 'YOLOXHead'
         head_module=dict(
-            type='YOLOv5HeadModule',
-            num_classes=num_classes,
-            in_channels=[256, 512, 1024],
-            widen_factor=widen_factor,
-            featmap_strides=strides,
-            num_base_priors=3),
-        prior_generator=dict(
-            type='mmdet.YOLOAnchorGenerator',
-            base_sizes=anchors,
-            strides=strides),
+            type='YOLOv5HeadModule',  # head_module 的类型是 'YOLOv5HeadModule', 我们目前也支持 'YOLOv6HeadModule', 'YOLOXHeadModule'
+            num_classes=num_classes,  # 分类的类别数量
+            in_channels=[256, 512, 1024],  # 输入通道数，与 Neck 的输出通道一致
+            widen_factor=widen_factor,  # 控制网络结构宽度的缩放因子
+            featmap_strides=strides,  # 多尺度特征图的步幅
+            num_base_priors=3),  # 在一个点上，先验框的数量
+        prior_generator=dict(  # 先验框(prior)生成器的配置
+            type='mmdet.YOLOAnchorGenerator',  # 先验框生成器的类型是 mmdet 中的 'YOLOAnchorGenerator'
+            base_sizes=anchors,  # 多尺度的先验框基本尺寸
+            strides=strides),  # 先验框生成器的步幅, 与 FPN 特征步幅一致。如果未设置 base_sizes，则当前步幅值将被视为 base_sizes。
         # scaled based on number of detection layers
         loss_cls=dict(
             type='mmdet.CrossEntropyLoss',
@@ -99,11 +99,11 @@ model = dict(
         prior_match_thr=4.,
         obj_level_weights=[4., 1., 0.4]),
     test_cfg=dict(
-        multi_label=True,
-        nms_pre=30000,
-        score_thr=0.001,
-        nms=dict(type='nms', iou_threshold=0.65),
-        max_per_img=300))
+        multi_label=True,   # 对于多类别预测来说是否考虑多标签，默认设置为 True
+        nms_pre=30000,  # NMS 前保留的最大检测框数目
+        score_thr=0.001,  # 过滤类别的分值，低于 score_thr 的检测框当做背景处理
+        nms=dict(type='nms', iou_threshold=0.65),  # NMS 的类型  NMS 的阈值
+        max_per_img=300))  # 每张图像 NMS 后保留的最大检测框数目
 
 albu_train_transforms = [
     dict(type='Blur', p=0.01),
